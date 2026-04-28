@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
 from .models import User, Student, Coordinator, Company, Registrar
 from .serializers import (
     UserSerializer, StudentSerializer, StudentCreateSerializer,
@@ -211,6 +212,34 @@ class CompanyDetailView(generics.RetrieveAPIView):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
     permission_classes = [permissions.IsAuthenticated]
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def approve_company(request, company_id):
+    company = get_object_or_404(Company, id=company_id)
+    user = request.user
+    
+    # Only coordinators can approve companies
+    if user.role != 'coordinator':
+        return Response({'error': 'Only coordinators can approve companies'}, 
+                       status=status.HTTP_403_FORBIDDEN)
+    
+    action = request.data.get('action')
+    if action not in ['approve', 'reject']:
+        return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if company.verification_status != 'pending':
+        return Response({'error': 'Company has already been processed'}, 
+                       status=status.HTTP_400_BAD_REQUEST)
+    
+    company.verification_status = 'approved' if action == 'approve' else 'rejected'
+    if hasattr(user, 'coordinator_profile'):
+        company.verified_by = user.coordinator_profile
+    company.verified_at = timezone.now()
+    company.save()
+    
+    serializer = CompanySerializer(company)
+    return Response(serializer.data)
 
 @api_view(['PUT'])
 @permission_classes([permissions.IsAuthenticated])

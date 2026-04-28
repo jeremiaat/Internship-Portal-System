@@ -15,9 +15,9 @@ const Sidebar = () => {
   if (user?.role === 'student') {
     menuItems = [...baseMenu, { name: 'Applications', href: '/applications' }, { name: 'Grades', href: '/grades' }];
   } else if (user?.role === 'company') {
-    menuItems = [...baseMenu, { name: 'Applications', href: '/applications' }];
+    menuItems = [{ name: 'Dashboard', href: '/dashboard' }, { name: 'My Internships', href: '/company/internships' }, { name: 'Applications', href: '/applications' }];
   } else if (user?.role === 'coordinator') {
-    menuItems = [...baseMenu, { name: 'Applications', href: '/applications' }, { name: 'Grades', href: '/grades' }];
+    menuItems = [...baseMenu, { name: 'Companies', href: '/companies' }, { name: 'Applications', href: '/applications' }, { name: 'Grades', href: '/grades' }];
   } else if (user?.role === 'registrar') {
     menuItems = [...baseMenu, { name: 'Applications', href: '/applications' }, { name: 'Grades', href: '/grades' }];
   }

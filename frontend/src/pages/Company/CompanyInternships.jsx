@@ -12,6 +12,9 @@ const CompanyInternships = () => {
   const [editingInternship, setEditingInternship] = useState(null);
   const [applications, setApplications] = useState({});
   const [showApplications, setShowApplications] = useState(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -32,22 +35,51 @@ const CompanyInternships = () => {
       navigate('/dashboard');
       return;
     }
+    console.log('Current user data:', user);
+    console.log('Company profile:', user?.profile_data);
+    console.log('Verification status:', user?.profile_data?.verification_status);
     fetchInternships();
   }, [user, navigate]);
 
+  
   const fetchInternships = async () => {
     try {
       setLoading(true);
       const response = await internshipAPI.getInternships();
       // Filter internships for current company
       const companyInternships = response.data.results?.filter(
-        internship => internship.company?.id === user?.company_profile?.id
+        internship => internship.company?.user?.id === user?.id
       ) || [];
       setInternships(companyInternships);
     } catch (error) {
       console.error('Error fetching internships:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshUserProfile = async () => {
+    try {
+      setRefreshing(true);
+      const response = await fetch('http://localhost:8000/api/auth/profile/', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (response.ok) {
+        const userData = await response.json();
+        console.log('User profile data:', userData);
+        console.log('Company profile data:', userData.profile_data);
+        console.log('Verification status:', userData.profile_data?.verification_status);
+        // Force page reload to get latest user data
+        window.location.reload();
+      } else {
+        console.error('Failed to fetch profile:', response.status);
+      }
+    } catch (error) {
+      console.error('Error refreshing user profile:', error);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -70,11 +102,22 @@ const CompanyInternships = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
+    
+    // Check if company is approved before proceeding
+    if (user?.profile_data?.verification_status !== 'approved') {
+      setError('Your company must be approved by a coordinator before posting internships. Please wait for approval.');
+      return;
+    }
+    
     try {
       if (editingInternship) {
         await internshipAPI.updateInternship(editingInternship.id, formData);
+        setSuccess('Internship updated successfully!');
       } else {
         await internshipAPI.createInternship(formData);
+        setSuccess('Internship posted successfully!');
       }
       
       setShowCreateForm(false);
@@ -93,7 +136,17 @@ const CompanyInternships = () => {
         status: 'active'
       });
       fetchInternships();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
+      if (error.response?.status === 403) {
+        setError(error.response.data?.error || 'You do not have permission to perform this action.');
+      } else if (error.response?.status === 400) {
+        setError(error.response.data?.error || 'Please check your input and try again.');
+      } else {
+        setError('An error occurred while saving the internship. Please try again.');
+      }
       console.error('Error saving internship:', error);
     }
   };
@@ -174,14 +227,71 @@ const CompanyInternships = () => {
 
   return (
     <div className="space-y-6">
+      {/* Success Message */}
+      {success && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <svg className="h-5 w-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm text-green-700">{success}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Company Approval Status Warning */}
+      {user?.profile_data?.verification_status !== 'approved' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <h3 className="text-sm font-medium text-yellow-800">Company Approval Pending</h3>
+                <p className="text-sm text-yellow-700 mt-1">
+                  Your company is currently {user?.profile_data?.verification_status || 'pending'}. You must be approved by a coordinator before posting internships.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={refreshUserProfile}
+              disabled={refreshing}
+              className="px-3 py-1 text-sm bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            >
+              {refreshing ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refreshing...
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh Status
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My Internships</h1>
           <p className="text-gray-600">Manage internship opportunities posted by your company</p>
         </div>
         <button
-          onClick={() => setShowCreateForm(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          onClick={() => {
+            setError('');
+            setSuccess('');
+            setShowCreateForm(true);
+          }}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled={user?.profile_data?.verification_status !== 'approved'}
         >
           Post New Internship
         </button>
@@ -194,6 +304,31 @@ const CompanyInternships = () => {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               {editingInternship ? 'Edit Internship' : 'Post New Internship'}
             </h2>
+            
+            {/* Success Message */}
+            {success && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <svg className="h-5 w-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-sm text-green-700">{success}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Internship Title</label>
@@ -229,11 +364,10 @@ const CompanyInternships = () => {
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                   >
                     <option value="">Select Department</option>
-                    <option value="Computer Science">Computer Science</option>
-                    <option value="Engineering">Engineering</option>
-                    <option value="Business">Business</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Finance">Finance</option>
+                    <option value="CSE">CSE</option>
+                    <option value="Software">Software</option>
+                    <option value="Communication">Communication</option>
+                    <option value="Power">Power</option>
                   </select>
                 </div>
                 <div>

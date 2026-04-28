@@ -20,6 +20,12 @@ import CoordinatorDashboard from './pages/Coordinator/CoordinatorDashboard';
 import CompanyDashboard from './pages/Company/CompanyDashboard';
 import RegistrarDashboard from './pages/Registrar/RegistrarDashboard';
 
+// Coordinator pages
+import CoordinatorCompanies from './pages/Coordinator/CoordinatorCompanies';
+
+// Company pages
+import CompanyInternships from './pages/Company/CompanyInternships';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -76,6 +82,8 @@ function AppRoutes() {
         <Route path="applications" element={<Applications />} />
         <Route path="reports" element={<Reports />} />
         <Route path="grades" element={<Grades />} />
+        <Route path="companies" element={<CoordinatorCompanies />} />
+        <Route path="company/internships" element={<CompanyInternships />} />
       </Route>
       
       {/* Fallback */}

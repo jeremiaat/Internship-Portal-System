@@ -37,7 +37,7 @@ const Applications = () => {
     }
   };
 
-  const canReview = user?.role === 'company' || user?.role === 'coordinator' || user?.role === 'registrar';
+  const canReview = user?.role === 'company';
 
   return (
     <div className="space-y-5">

@@ -18,5 +18,4 @@ urlpatterns = [
     
     # Supervisor endpoints
     path('supervisors/', views.SupervisorListView.as_view(), name='supervisor-list'),
-    path('supervisors/create/', views.SupervisorCreateView.as_view(), name='supervisor-create'),
 ]

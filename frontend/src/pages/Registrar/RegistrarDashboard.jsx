@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext.jsx';
-import { gradeAPI, applicationAPI } from '../../services/api';
+import { gradeAPI, applicationAPI, userAPI } from '../../services/api';
 
 const RegistrarDashboard = () => {
   const { user } = useAuth();

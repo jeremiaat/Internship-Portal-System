@@ -10,7 +10,8 @@ urlpatterns = [
     path('change-password/', views.change_password, name='change_password'),
     path('students/', views.StudentListView.as_view(), name='student-list'),
     path('students/<int:pk>/', views.StudentDetailView.as_view(), name='student-detail'),
-    path('students/<int:student_id>/profile-grade/', views.assign_student_profile_grade, name='student-profile-grade'),
+    path('students/<int:student_id>/profile-grade/', views.assign_student_profile_grade, name='assign_student_profile_grade'),
     path('companies/', views.CompanyListView.as_view(), name='company-list'),
     path('companies/<int:pk>/', views.CompanyDetailView.as_view(), name='company-detail'),
+    path('companies/<int:company_id>/approve/', views.approve_company, name='approve-company'),
 ]

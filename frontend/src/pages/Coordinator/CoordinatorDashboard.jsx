@@ -148,7 +148,7 @@ const CoordinatorDashboard = () => {
       <div className="bg-white p-6 rounded-lg shadow">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button onClick={() => navigate('/internships')} className="p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
+          <button onClick={() => navigate('/companies')} className="p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0 bg-blue-100 rounded-lg p-2">
                 <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

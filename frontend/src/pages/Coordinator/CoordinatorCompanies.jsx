@@ -21,13 +21,13 @@ const CoordinatorCompanies = () => {
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/companies/', {
+      const response = await fetch('http://localhost:8000/api/auth/companies/', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       const data = await response.json();
-      setCompanies(data.results || []);
+      setCompanies(data.results || data || []);
     } catch (error) {
       console.error('Error fetching companies:', error);
     } finally {
@@ -37,10 +37,10 @@ const CoordinatorCompanies = () => {
 
   const handleApproval = async (companyId, action) => {
     try {
-      await fetch(`/api/companies/${companyId}/approve/`, {
+      await fetch(`http://localhost:8000/api/auth/companies/${companyId}/approve/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ action })

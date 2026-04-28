@@ -11,7 +11,7 @@ from .serializers import (
     SupervisorSerializer, SupervisorCreateSerializer
 )
 
-class InternshipListView(generics.ListAPIView):
+class InternshipListView(generics.ListCreateAPIView):
     queryset = Internship.objects.all()
     serializer_class = InternshipSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -30,11 +30,45 @@ class InternshipListView(generics.ListAPIView):
         if user.role == 'company':
             return base_queryset.filter(company=user.company_profile)
         return base_queryset
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return InternshipCreateSerializer
+        return InternshipSerializer
+    
+    def perform_create(self, serializer):
+        # Only company users can create internships
+        if self.request.user.role != 'company':
+            raise permissions.PermissionDenied("Only company users can create internships")
+        
+        company = self.request.user.company_profile
+        serializer.save(company=company)
 
-class InternshipDetailView(generics.RetrieveAPIView):
+class InternshipDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Internship.objects.all()
     serializer_class = InternshipSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return InternshipCreateSerializer
+        return InternshipSerializer
+    
+    def update(self, request, *args, **kwargs):
+        obj = self.get_object()
+        user = request.user
+        # Only company users can update their own internships
+        if user.role != 'company' or obj.company != user.company_profile:
+            raise permissions.PermissionDenied("You can only update your own internships")
+        return super().update(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        user = request.user
+        # Only company users can delete their own internships
+        if user.role != 'company' or obj.company != user.company_profile:
+            raise permissions.PermissionDenied("You can only delete your own internships")
+        return super().delete(request, *args, **kwargs)
 
 class InternshipCreateView(generics.CreateAPIView):
     queryset = Internship.objects.all()
@@ -47,6 +81,10 @@ class InternshipCreateView(generics.CreateAPIView):
             raise permissions.PermissionDenied("Only company users can create internships")
         
         company = self.request.user.company_profile
+        # Check if company is approved
+        if company.verification_status != 'approved':
+            raise permissions.PermissionDenied("Your company must be approved before posting internships")
+        
         serializer.save(company=company)
 
 class InternshipUpdateView(generics.UpdateAPIView):
@@ -162,14 +200,11 @@ def update_application_status(request, application_id):
     if user.role == 'student':
         return Response({'error': 'Students cannot update application status'},
                        status=status.HTTP_403_FORBIDDEN)
-    if user.role == 'company' and application.internship.company.user != user:
-        return Response({'error': 'You can only update applications for your internships'}, 
-                       status=status.HTTP_403_FORBIDDEN)
-    elif user.role == 'coordinator' and application.internship.department != user.coordinator_profile.department:
-        return Response({'error': 'You can only update applications in your department'}, 
-                       status=status.HTTP_403_FORBIDDEN)
-    elif user.role not in ['company', 'coordinator', 'registrar']:
+    if user.role != 'company':
         return Response({'error': 'You do not have permission to update applications'},
+                       status=status.HTTP_403_FORBIDDEN)
+    if application.internship.company.user != user:
+        return Response({'error': 'You can only update applications for your internships'}, 
                        status=status.HTTP_403_FORBIDDEN)
     
     new_status = request.data.get('status')
@@ -182,15 +217,15 @@ def update_application_status(request, application_id):
     serializer = ApplicationSerializer(application)
     return Response(serializer.data)
 
-class SupervisorListView(generics.ListAPIView):
+class SupervisorListView(generics.ListCreateAPIView):
     queryset = Supervisor.objects.all()
     serializer_class = SupervisorSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-class SupervisorCreateView(generics.CreateAPIView):
-    queryset = Supervisor.objects.all()
-    serializer_class = SupervisorCreateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return SupervisorCreateSerializer
+        return SupervisorSerializer
     
     def perform_create(self, serializer):
         if self.request.user.role not in ['company', 'coordinator']:

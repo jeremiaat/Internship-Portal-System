@@ -51,11 +51,20 @@ class Coordinator(models.Model):
         db_table = 'coordinators'
 
 class Company(models.Model):
+    VERIFICATION_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='company_profile')
     company_name = models.CharField(max_length=200)
     industry = models.CharField(max_length=100)
     address = models.TextField()
     website = models.URLField(blank=True, null=True)
+    verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS_CHOICES, default='pending')
+    verified_by = models.ForeignKey('Coordinator', on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_companies')
+    verified_at = models.DateTimeField(null=True, blank=True)
     
     class Meta:
         db_table = 'companies'
