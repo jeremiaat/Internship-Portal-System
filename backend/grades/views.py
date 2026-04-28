@@ -10,7 +10,7 @@ from .serializers import (
     GradeAppealSerializer, GradeAppealCreateSerializer
 )
 
-class GradeListView(generics.ListAPIView):
+class GradeListView(generics.ListCreateAPIView):
     serializer_class = GradeSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
@@ -27,8 +27,19 @@ class GradeListView(generics.ListAPIView):
         elif user.role == 'registrar':
             return Grade.objects.all()
         return Grade.objects.none()
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return GradeCreateSerializer
+        return GradeSerializer
+    
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.role != 'registrar':
+            raise permissions.PermissionDenied("Only registrars can create grades")
+        serializer.save()
 
-class GradeDetailView(generics.RetrieveAPIView):
+class GradeDetailView(generics.RetrieveUpdateAPIView):
     queryset = Grade.objects.all()
     serializer_class = GradeSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -40,6 +51,17 @@ class GradeDetailView(generics.RetrieveAPIView):
         if user.role == 'student' and obj.student.user != user:
             raise permissions.PermissionDenied("You can only view your own grades")
         return obj
+    
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return GradeUpdateSerializer
+        return GradeSerializer
+    
+    def update(self, request, *args, **kwargs):
+        user = request.user
+        if user.role != 'registrar':
+            raise permissions.PermissionDenied("Only registrars can update grades")
+        return super().update(request, *args, **kwargs)
 
 class GradeCreateView(generics.CreateAPIView):
     serializer_class = GradeCreateSerializer

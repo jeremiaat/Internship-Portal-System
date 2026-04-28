@@ -79,7 +79,7 @@ const CompanyPerformanceFeedback = () => {
         areas_for_improvement: feedbackData.areas_for_improvement,
         additional_comments: feedbackData.additional_comments,
         would_hire_again: feedbackData.would_hire_again,
-        supervisor: user.company_profile.id
+        supervisor: user.profile_data.id
       };
 
       // Submit feedback via API (you'll need to create this endpoint)
