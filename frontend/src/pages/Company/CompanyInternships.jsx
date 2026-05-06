@@ -19,7 +19,7 @@ const CompanyInternships = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    department: '',
+    departments: [],
     location: '',
     start_date: '',
     end_date: '',
@@ -51,6 +51,12 @@ const CompanyInternships = () => {
         internship => internship.company?.user?.id === user?.id
       ) || [];
       setInternships(companyInternships);
+      
+      // Fetch applications for each internship
+      const applicationPromises = companyInternships.map(internship => 
+        fetchApplications(internship.id)
+      );
+      await Promise.all(applicationPromises);
     } catch (error) {
       console.error('Error fetching internships:', error);
     } finally {
@@ -85,9 +91,9 @@ const CompanyInternships = () => {
 
   const fetchApplications = async (internshipId) => {
     try {
-      const response = await fetch(`/api/applications/?internship=${internshipId}`, {
+      const response = await fetch(`http://localhost:5000/api/applications?internship_id=${internshipId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       const data = await response.json();
@@ -125,7 +131,7 @@ const CompanyInternships = () => {
       setFormData({
         title: '',
         description: '',
-        department: '',
+        departments: [],
         location: '',
         start_date: '',
         end_date: '',
@@ -156,7 +162,7 @@ const CompanyInternships = () => {
     setFormData({
       title: internship.title,
       description: internship.description,
-      department: internship.department,
+      departments: internship.department ? [internship.department] : [],
       location: internship.location,
       start_date: internship.start_date,
       end_date: internship.end_date,
@@ -354,33 +360,82 @@ const CompanyInternships = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                  <select
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  >
-                    <option value="">Select Department</option>
-                    <option value="CSE">CSE</option>
-                    <option value="Software">Software</option>
-                    <option value="Communication">Communication</option>
-                    <option value="Power">Power</option>
-                  </select>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Designed for (select all that apply)</label>
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={formData.departments.includes('CSE')}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({ ...formData, departments: [...formData.departments, 'CSE'] });
+                        } else {
+                          setFormData({ ...formData, departments: formData.departments.filter(d => d !== 'CSE') });
+                        }
+                      }}
+                    />
+                    <span className="text-sm text-gray-700">Computer Science (CSE)</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={formData.departments.includes('Software')}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({ ...formData, departments: [...formData.departments, 'Software'] });
+                        } else {
+                          setFormData({ ...formData, departments: formData.departments.filter(d => d !== 'Software') });
+                        }
+                      }}
+                    />
+                    <span className="text-sm text-gray-700">Software Engineering</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={formData.departments.includes('Communication')}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({ ...formData, departments: [...formData.departments, 'Communication'] });
+                        } else {
+                          setFormData({ ...formData, departments: formData.departments.filter(d => d !== 'Communication') });
+                        }
+                      }}
+                    />
+                    <span className="text-sm text-gray-700">Communication</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={formData.departments.includes('Power')}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({ ...formData, departments: [...formData.departments, 'Power'] });
+                        } else {
+                          setFormData({ ...formData, departments: formData.departments.filter(d => d !== 'Power') });
+                        }
+                      }}
+                    />
+                    <span className="text-sm text-gray-700">Power</span>
+                  </label>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="e.g., New York, NY or Remote"
-                  />
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="e.g., New York, NY or Remote"
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -474,7 +529,7 @@ const CompanyInternships = () => {
                     setFormData({
                       title: '',
                       description: '',
-                      department: '',
+                      departments: [],
                       location: '',
                       start_date: '',
                       end_date: '',
@@ -517,7 +572,7 @@ const CompanyInternships = () => {
                     </div>
                     
                     <p className="mt-1 text-sm text-gray-600">
-                      {internship.department} • {internship.location}
+                      Designed for: {internship.department || 'All Departments'} • {internship.location}
                     </p>
                     
                     <p className="mt-2 text-sm text-gray-500 line-clamp-2">

@@ -25,7 +25,7 @@ const InternshipDetail = () => {
       setInternship(details.data);
 
       if (user?.role === 'student') {
-        const apps = await applicationAPI.getApplications({ internship: id });
+        const apps = await applicationAPI.getApplications({ internship_id: id });
         const exists = (apps.data.results || []).some((item) => item.internship?.id === Number(id));
         setHasApplied(exists);
       }
@@ -67,71 +67,96 @@ const InternshipDetail = () => {
   const canApply = user?.role === 'student' && !hasApplied && internship.status === 'active';
 
   return (
-    <div className="space-y-6">
-      <button onClick={() => navigate('/internships')} className="text-sm text-blue-700 hover:text-blue-900">
-        Back to internships
+    <div className="space-y-8">
+      <button onClick={() => navigate('/internships')} className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+        ← Back to internships
       </button>
-      {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">{error}</div>}
-      <div className="bg-white border border-gray-200 rounded-md p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">{internship.title}</h1>
-            <p className="text-sm text-gray-600">{internship.company?.company_name} - {internship.location}</p>
+      {error && <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">{error}</div>}
+      <div className="bg-white border border-gray-200 rounded-xl p-8">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{internship.title}</h1>
+            <p className="text-gray-500 mt-2">{internship.company?.company_name} • {internship.location}</p>
           </div>
-          <span className="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 capitalize">{internship.status}</span>
+          <span className="text-sm px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 font-medium capitalize">{internship.status}</span>
         </div>
-        <div className="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-5">
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">Description</h2>
-              <p className="text-gray-700">{internship.description}</p>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Description</h2>
+              <p className="text-gray-600 leading-relaxed">{internship.description}</p>
             </section>
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">Requirements</h2>
-              <p className="text-gray-700">{internship.requirements}</p>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Requirements</h2>
+              <p className="text-gray-600 leading-relaxed">{internship.requirements}</p>
             </section>
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">Responsibilities</h2>
-              <p className="text-gray-700">{internship.responsibilities}</p>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Responsibilities</h2>
+              <p className="text-gray-600 leading-relaxed">{internship.responsibilities}</p>
             </section>
           </div>
-          <div className="space-y-2 text-sm">
-            <p><span className="font-medium">Department:</span> {internship.department}</p>
-            <p><span className="font-medium">Start:</span> {new Date(internship.start_date).toLocaleDateString()}</p>
-            <p><span className="font-medium">End:</span> {new Date(internship.end_date).toLocaleDateString()}</p>
-            <p><span className="font-medium">Deadline:</span> {new Date(internship.application_deadline).toLocaleDateString()}</p>
-            <p><span className="font-medium">Stipend:</span> {internship.stipend ? `$${internship.stipend}` : 'Not specified'}</p>
+          <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Details</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-500">Department</span>
+                <span className="text-sm font-medium text-gray-900">{internship.department}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-500">Start Date</span>
+                <span className="text-sm font-medium text-gray-900">{new Date(internship.start_date).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-500">End Date</span>
+                <span className="text-sm font-medium text-gray-900">{new Date(internship.end_date).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-500">Deadline</span>
+                <span className="text-sm font-medium text-gray-900">{new Date(internship.application_deadline).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-500">Stipend</span>
+                <span className="text-sm font-medium text-gray-900">{internship.stipend ? `$${internship.stipend}/mo` : 'Not specified'}</span>
+              </div>
+            </div>
             {canApply && (
-              <button onClick={() => setShowForm(true)} className="mt-3 w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+              <button onClick={() => setShowForm(true)} className="mt-6 w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors">
                 Apply Now
               </button>
             )}
             {hasApplied && (
-              <div className="mt-3 p-2 text-sm bg-green-50 border border-green-200 text-green-700 rounded-md">Application submitted</div>
+              <div className="mt-6 p-3 text-sm bg-green-50 border border-green-200 text-green-700 rounded-lg text-center font-medium">Application submitted</div>
             )}
           </div>
         </div>
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-40">
-          <div className="bg-white w-full max-w-xl rounded-md border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Submit Application</h2>
-            <form onSubmit={handleApply} className="space-y-3">
-              <textarea
-                required
-                rows={7}
-                value={coverLetter}
-                onChange={(e) => setCoverLetter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="Write your cover letter"
-              />
-              <input type="file" accept=".pdf,.doc,.docx" onChange={(e) => setResume(e.target.files?.[0] || null)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border border-gray-300 rounded-md">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white w-full max-w-xl rounded-xl border border-gray-200 p-6 shadow-xl">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Submit Application</h2>
+            <form onSubmit={handleApply} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cover Letter</label>
+                <textarea
+                  required
+                  rows={7}
+                  value={coverLetter}
+                  onChange={(e) => setCoverLetter(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Write your cover letter explaining why you're interested in this position..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Resume (optional)</label>
+                <input type="file" accept=".pdf,.doc,.docx" onChange={(e) => setResume(e.target.files?.[0] || null)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                <p className="text-xs text-gray-500 mt-1">Accepted formats: PDF, DOC, DOCX</p>
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                   Cancel
                 </button>
-                <button disabled={submitting} type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+                <button disabled={submitting} type="submit" className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                   {submitting ? 'Submitting...' : 'Submit'}
                 </button>
               </div>

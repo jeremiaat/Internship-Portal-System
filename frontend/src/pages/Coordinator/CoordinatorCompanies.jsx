@@ -21,15 +21,21 @@ const CoordinatorCompanies = () => {
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/api/auth/companies/', {
+      const response = await fetch('http://localhost:5000/api/auth/companies', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       const data = await response.json();
-      setCompanies(data.results || data || []);
+      if (response.ok) {
+        setCompanies(data.results || []);
+      } else {
+        console.error('Error fetching companies:', data.error);
+        setCompanies([]);
+      }
     } catch (error) {
       console.error('Error fetching companies:', error);
+      setCompanies([]);
     } finally {
       setLoading(false);
     }
@@ -37,8 +43,8 @@ const CoordinatorCompanies = () => {
 
   const handleApproval = async (companyId, action) => {
     try {
-      await fetch(`http://localhost:8000/api/auth/companies/${companyId}/approve/`, {
-        method: 'POST',
+      const response = await fetch(`http://localhost:5000/api/auth/companies/${companyId}/approve`, {
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -46,7 +52,12 @@ const CoordinatorCompanies = () => {
         body: JSON.stringify({ action })
       });
       
-      fetchCompanies();
+      if (response.ok) {
+        fetchCompanies();
+      } else {
+        const data = await response.json();
+        console.error('Error approving company:', data.error);
+      }
     } catch (error) {
       console.error('Error updating company status:', error);
     }

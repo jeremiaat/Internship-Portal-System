@@ -2,8 +2,9 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
 import { NotificationProvider } from './contexts/NotificationContext.jsx';
+import { ToastProvider } from './components/UI/Toast.jsx';
 
-// Import components (we'll create these next)
+// Import components
 import Layout from './components/Layout/Layout';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
@@ -25,6 +26,8 @@ import CoordinatorCompanies from './pages/Coordinator/CoordinatorCompanies';
 
 // Company pages
 import CompanyInternships from './pages/Company/CompanyInternships';
+import CompanyApplications from './pages/Company/CompanyApplications';
+import CompanyApplicationReview from './pages/Company/CompanyApplicationReview';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -32,8 +35,8 @@ const ProtectedRoute = ({ children }) => {
   
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
@@ -84,6 +87,8 @@ function AppRoutes() {
         <Route path="grades" element={<Grades />} />
         <Route path="companies" element={<CoordinatorCompanies />} />
         <Route path="company/internships" element={<CompanyInternships />} />
+        <Route path="company/applications" element={<CompanyApplications />} />
+        <Route path="company/applications/:id" element={<CompanyApplicationReview />} />
       </Route>
       
       {/* Fallback */}
@@ -96,9 +101,11 @@ function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
+        <ToastProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </ToastProvider>
       </NotificationProvider>
     </AuthProvider>
   );
