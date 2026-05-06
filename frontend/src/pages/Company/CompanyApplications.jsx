@@ -116,6 +116,8 @@ const CompanyApplications = () => {
     }
   };
 
+  const isPdfResume = selectedApplication?.resume?.toLowerCase().endsWith('.pdf');
+
   const getStatusColor = (status) => {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-800',
@@ -431,14 +433,30 @@ const CompanyApplications = () => {
                         <p className="text-sm text-gray-900 mt-1">{selectedApplication.student?.credits_completed}</p>
                       </div>
 
-                      {/* Resume Download */}
+                      {/* Resume Preview */}
                       {selectedApplication.resume && (
-                        <button
-                          onClick={downloadResume}
-                          className="w-full mt-4 px-3 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm"
-                        >
-                          <span>📄</span> Download Resume
-                        </button>
+                        <div className="mt-4 space-y-3">
+                          <button
+                            onClick={downloadResume}
+                            className="w-full px-3 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                          >
+                            <span>📄</span> Open Resume
+                          </button>
+                          {isPdfResume ? (
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-2">
+                              <p className="text-xs text-gray-500 mb-2">Preview</p>
+                              <iframe
+                                src={selectedApplication.resume}
+                                title="Resume Preview"
+                                className="w-full h-64 rounded-md border"
+                              />
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500">
+                              Resume file cannot be previewed inline. Click &quot;Open Resume&quot; to view it in a new tab.
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
